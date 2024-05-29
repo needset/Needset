@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NeedsetShop</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f0f0f0;
+        }
+
+        header {
+            background-color: #333;
+            color: white;
+            padding: 10px 0;
+        }
+
+        header h1 {
+            margin: 0;
+            text-align: center;
+        }
+
+        nav ul {
+            list-style: none;
+            display: flex;
+            justify-content: center;
+            margin: 0;
+            padding: 0;
+        }
+
+        nav ul li {
+            margin: 0 15px;
+        }
+
+        nav ul li a {
+            color: white;
+            text-decoration: none;
+        }
+
+        #content {
+            padding: 20px;
+        }
+
+        form {
+            display: flex;
+            flex-direction: column;
+            max-width: 300px;
+            margin: auto;
+        }
+
+        form input, form button {
+            margin: 5px 0;
+            padding: 10px;
+        }
+
+        button {
+            background-color: #333;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #555;
+        }
+
+        #productList ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        #productList ul li {
+            margin: 10px 0;
+        }
+
+        #cartItems ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        #cartItems ul li {
+            margin: 10px 0;
+        }
+
+        .product-item {
+            border: 1px solid #ccc;
+            padding: 10px;
+            margin: 10px 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .product-item button {
+            margin-left: 10px;
+        }
+
+        .edit-form {
+            display: none;
+            flex-direction: column;
+            max-width: 300px;
+            margin: 10px 0;
+        }
+
+        .edit-form input, .edit-form button {
+            margin: 5px 0;
+            padding: 10px;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>NeedsetShop</h1>
+        <nav>
+            <ul>
+                <li><a href="#" id="home">Главная</a></li>
+                <li><a href="#" id="profile">Профиль</a></li>
+                <li><a href="#" id="myProducts">Мои товары</a></li>
+                <li><a href="#" id="login">Вход</a></li>
+                <li><a href="#" id="register">Регистрация</a></li>
+                <li><a href="#" id="cart">Корзина</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main id="content">
+        <!-- Контент будет динамически загружаться сюда -->
+    </main>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const content = document.getElementById('content');
+            const homeLink = document.getElementById('home');
+            const profileLink = document.getElementById('profile');
+            const myProductsLink = document.getElementById('myProducts');
+            const loginLink = document.getElementById('login');
+            const registerLink = document.getElementById('register');
+            const cartLink = document.getElementById('cart');
+
+            homeLink.addEventListener('click', loadHome);
+            profileLink.addEventListener('click', loadProfile);
+            myProductsLink.addEventListener('click', loadMyProducts);
+            loginLink.addEventListener('click', loadLoginForm);
+            registerLink.addEventListener('click', loadRegisterForm);
+            cartLink.addEventListener('click', loadCart);
+
+            function loadHome() {
+                content.innerHTML = `
+                    <h1>Добро пожаловать на NeedsetShop!</h1>
+                    <div id="productList">
+                        <h2>Товары</h2>
+                        <ul id="products"></ul>
+                    </div>
+                `;
+
+                loadProducts();
+            }
+
+            function loadProfile() {
+                content.innerHTML = `
+                    <h1>Профиль</h1>
+                    <div id="userProfile"></div>
+                    <form id="avatarForm">
+                        <input type="file" id="avatarInput" accept="image/*">
+                        <button type="submit">Загрузить аватар</button>
+                    </form>
+                    <button id="consoleButton">Консоль</button>
+                    <button id="logoutButton">Выйти</button>
+                `;
+
+                document.getElementById('avatarForm').addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    uploadAvatar();
+                });
+
+                document.getElementById('logoutButton').addEventListener('click', logoutUser);
+
+                document.getElementById('consoleButton').addEventListener('click', openConsole);
+
+                loadUserProfile();
+            }
+
+            function loadMyProducts() {
+                content.innerHTML = `
+                    <h1>Мои товары</h1>
+                    <button id="addProductButton">Добавить товар</button>
+                    <div id="addProductForm" style="display:none;">
+                        <input type="text" id="productName" placeholder="Название товара" required>
+                        <input type="text" id="productDescription" placeholder="Описание товара" required>
+                        <input type="number" id="productPrice" placeholder="Цена" required>
+                        <button onclick="saveProduct()">Сохранить</button>
+                    </div>
+                    <ul id="userProducts"></ul>
+                `;
+
+                document.getElementById('addProductButton').addEventListener('click', () => {
+                    document.getElementById('addProductForm').style.display = 'flex';
+                });
+
+                loadUserProducts();
+            }
+
+            function loadLoginForm() {
+                content.innerHTML = `
+                    <h1>Вход</h1>
+                    <form id="loginForm">
+                        <input type="text" id="loginUsername" placeholder="Имя пользователя" required>
+                        <input type="password" id="loginPassword" placeholder="Пароль" required>
+                        <button type="submit">Войти</button>
+                    </form>
+                `;
+
+                document.getElementById('loginForm').addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    loginUser();
+                });
+            }
+
+            function loadRegisterForm() {
+                content.innerHTML = `
+                    <h1>Регистрация</h1>
+                    <form id="registerForm">
+                        <input type="text" id="registerUsername" placeholder="Имя пользователя" required>
+                        <input type="password" id="registerPassword" placeholder="Пароль" required>
+                        <button type="submit">Зарегистрироваться</button>
+                    </form>
+                `;
+
+                document.getElementById('registerForm').addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    registerUser();
+                });
+            }
+
+            function loadCart() {
+                content.innerHTML = `
+                    <h1>Корзина</h1>
+                    <ul id="cartItems"></ul>
+                `;
+
+                loadCartItems();
+            }
+
+            function saveProduct() {
+                const name = document.getElementById('productName').value;
+                const description = document.getElementById('productDescription').value;
+                const price = document.getElementById('productPrice').value;
+                const products = JSON.parse(localStorage.getItem('products')) || [];
+                products.push({ name, description, price });
+                localStorage.setItem('products', JSON.stringify(products));
+                loadUserProducts();
+                document.getElementById('addProductForm').style.display = 'none';
+                document.getElementById('productName').value = '';
+                document.getElementById('productDescription').value = '';
+                document.getElementById('productPrice').value = '';
+            }
+
+            function loadProducts() {
+                const products = JSON.parse(localStorage.getItem('products')) || [];
+                const productList = document.getElementById('products');
+                productList.innerHTML = '';
+                products.forEach((product, index) => {
+                    const li = document.createElement('li');
+                    li.className = 'product-item';
+                    li.innerHTML = `
+                        <span>${product.name} - ${product.description} - ${product.price} руб.</span>
+                        <button onclick="addToCart(${index})">Добавить в корзину</button>
+                    `;
+                    productList.appendChild(li);
+                });
+            }
+
+            function loadUserProducts() {
+                const products = JSON.parse(localStorage.getItem('products')) || [];
+                const userProducts = document.getElementById('userProducts');
+                userProducts.innerHTML = '';
+                products.forEach((product, index) => {
+                    const li = document.createElement('li');
+                    li.className = 'product-item';
+                    li.innerHTML = `
+                        <span>${product.name} - ${product.description} - ${product.price} руб.</span>
+                        <div>
+                            <button onclick="editProduct(${index})">Редактировать</button>
+                            <button onclick="deleteProduct(${index})">Удалить</button>
+                            <div class="edit-form" id="editForm${index}">
+                                <input type="text" id="editName${index}" placeholder="Название товара" value="${product.name}" required>
+                                <input type="text" id="editDescription${index}" placeholder="Описание товара" value="${product.description}" required>
+                                <input type="number" id="editPrice${index}" placeholder="Цена" value="${product.price}" required>
+                                <button onclick="saveEdit(${index})">Сохранить</button>
+                                <button onclick="cancelEdit(${index})">Отмена</button>
+                            </div>
+                        </div>
+                    `;
+                    userProducts.appendChild(li);
+                });
+            }
+
+            window.editProduct = function(index) {
+                document.getElementById(`editForm${index}`).style.display = 'flex';
+            }
+
+            window.saveEdit = function(index) {
+                const name = document.getElementById(`editName${index}`).value;
+                const description = document.getElementById(`editDescription${index}`).value;
+                const price = document.getElementById(`editPrice${index}`).value;
+                const products = JSON.parse(localStorage.getItem('products')) || [];
+                products[index] = { name, description, price };
+                localStorage.setItem('products', JSON.stringify(products));
+                loadUserProducts();
+                loadHome();
+            }
+
+            window.cancelEdit = function(index) {
+                document.getElementById(`editForm${index}`).style.display = 'none';
+            }
+
+            window.deleteProduct = function(index) {
+                const products = JSON.parse(localStorage.getItem('products')) || [];
+                products.splice(index, 1);
+                localStorage.setItem('products', JSON.stringify(products));
+                loadUserProducts();
+                loadHome();
+            }
+
+            window.addToCart = function(productIndex) {
+                const products = JSON.parse(localStorage.getItem('products'));
+                const cart = JSON.parse(localStorage.getItem('cart')) || [];
+                cart.push(products[productIndex]);
+                localStorage.setItem('cart', JSON.stringify(cart));
+                alert('Товар добавлен в корзину');
+            }
+
+            window.removeFromCart = function(cartIndex) {
+                const cart = JSON.parse(localStorage.getItem('cart')) || [];
+                cart.splice(cartIndex, 1);
+                localStorage.setItem('cart', JSON.stringify(cart));
+                loadCartItems();
+            }
+
+            function loadCartItems() {
+                const cart = JSON.parse(localStorage.getItem('cart')) || [];
+                const cartItems = document.getElementById('cartItems');
+                cartItems.innerHTML = '';
+                cart.forEach((item, index) => {
+                    const li = document.createElement('li');
+                    li.className = 'product-item';
+                    li.innerHTML = `
+                        <span>${item.name} - ${item.price} руб.</span>
+                        <button onclick="removeFromCart(${index})">Удалить</button>
+                    `;
+                    cartItems.appendChild(li);
+                });
+            }
+
+            function loadUserProfile() {
+                const user = JSON.parse(localStorage.getItem('user'));
+                const userProfile = document.getElementById('userProfile');
+                if (user) {
+                    userProfile.innerHTML = `
+                        <p>Имя пользователя: ${user.username}</p>
+                        <img src="${user.avatar || 'default-avatar.png'}" alt="Аватарка" style="width: 100px; height: 100px;">
+                        <p id="userRole">${user.role ? 'Роль: ' + user.role : ''}</p>
+                    `;
+                } else {
+                    userProfile.innerHTML = '<p>Вы не вошли в систему.</p>';
+                }
+            }
+
+            function uploadAvatar() {
+                const avatarInput = document.getElementById('avatarInput');
+                const user = JSON.parse(localStorage.getItem('user'));
+                if (user && avatarInput.files[0]) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        user.avatar = e.target.result;
+                        localStorage.setItem('user', JSON.stringify(user));
+                        loadUserProfile();
+                    };
+                    reader.readAsDataURL(avatarInput.files[0]);
+                }
+            }
+
+            function openConsole() {
+                const password = prompt('Введите пароль:');
+                if (password === 'Admin') {
+                    const user = JSON.parse(localStorage.getItem('user'));
+                    user.role = 'Администратор';
+                    localStorage.setItem('user', JSON.stringify(user));
+                    loadUserProfile();
+                    alert('Вы вошли как Администратор');
+                } else {
+                    alert('Неверный пароль');
+                }
+            }
+
+            function loginUser() {
+                const username = document.getElementById('loginUsername').value;
+                const password = document.getElementById('loginPassword').value;
+                const user = JSON.parse(localStorage.getItem('user'));
+                if (user && user.username === username && user.password === password) {
+                    alert('Успешный вход');
+                    homeLink.style.display = 'block';
+                    profileLink.style.display = 'block';
+                    myProductsLink.style.display = 'block';
+                    cartLink.style.display = 'block';
+                    loginLink.style.display = 'none';
+                    registerLink.style.display = 'none';
+                    loadHome();
+                } else {
+                    alert('Неверное имя пользователя или пароль');
+                }
+            }
+
+            function registerUser() {
+                const username = document.getElementById('registerUsername').value;
+                const password = document.getElementById('registerPassword').value;
+                const user = { username, password, avatar: null };
+                localStorage.setItem('user', JSON.stringify(user));
+                alert('Регистрация прошла успешно');
+                loadLoginForm();
+            }
+
+            function logoutUser() {
+                localStorage.removeItem('user');
+                alert('Вы вышли из аккаунта');
+                homeLink.style.display = 'block';
+                profileLink.style.display = 'block';
+                myProductsLink.style.display = 'block';
+                cartLink.style.display = 'block';
+                loginLink.style.display = 'block';
+                registerLink.style.display = 'block';
+                loadHome();
+            }
+
+            function checkUserStatus() {
+                const user = JSON.parse(localStorage.getItem('user'));
+                if (user) {
+                    homeLink.style.display = 'block';
+                    profileLink.style.display = 'block';
+                    myProductsLink.style.display = 'block';
+                    cartLink.style.display = 'block';
+                    loginLink.style.display = 'none';
+                    registerLink.style.display = 'none';
+                } else {
+                    homeLink.style.display = 'block';
+                    profileLink.style.display = 'block';
+                    myProductsLink.style.display = 'block';
+                    cartLink.style.display = 'block';
+                    loginLink.style.display = 'block';
+                    registerLink.style.display = 'block';
+                }
+            }
+
+            checkUserStatus();  // Проверяем статус пользователя при загрузке сайта
+            loadHome();  // Загружаем домашнюю страницу при загрузке сайта
+        });
+    </script>
+</body>
+</html>
